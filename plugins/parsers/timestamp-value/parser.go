@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/influxdata/telegraf"
+	"github.com/influxdata/telegraf/plugins/parsers/value"
 )
 
 type TimestampValueParser struct {
@@ -19,18 +19,18 @@ type TimestampValueParser struct {
 }
 
 func (v *TimestampValueParser) Parse(buf []byte) ([]telegraf.Metric, error) {
-	vStr := string(bytes.TrimSpace(bytes.Trim(buf, "\x00")))
-
-	delim := v.Delimiter
+	delim := []byte(v.Delimiter)
+	// set default delimiter
 	if v.Delimiter == "" {
-		delim = " "
+		delim = []byte{' '}
 	}
-	parts := strings.Split(vStr, delim)
+	parts := bytes.Split(buf, delim)
 
 	var timestamp time.Time
 	var err error
-	ts := parts[0]
+	ts := string(parts[0])
 	if v.TimeLayout == "" {
+		// parse nanosecond unix timestamp
 		i, err := strconv.ParseInt(ts, 10, 64)
 		if err != nil {
 			return nil, err
@@ -39,34 +39,13 @@ func (v *TimestampValueParser) Parse(buf []byte) ([]telegraf.Metric, error) {
 		timestamp = time.Unix(0, i)
 
 	} else {
-		timestamp, err = time.Parse(v.TimeLayout, parts[0])
+		timestamp, err = time.Parse(v.TimeLayout, ts)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	vStr = parts[1]
-	// unless it's a string, separate out any fields in the buffer,
-	// ignore anything but the last.
-	if v.DataType != "string" {
-		values := strings.Fields(vStr)
-		if len(values) < 1 {
-			return []telegraf.Metric{}, nil
-		}
-		vStr = string(values[len(values)-1])
-	}
-
-	var value interface{}
-	switch v.DataType {
-	case "", "int", "integer":
-		value, err = strconv.Atoi(vStr)
-	case "float", "long":
-		value, err = strconv.ParseFloat(vStr, 64)
-	case "str", "string":
-		value = vStr
-	case "bool", "boolean":
-		value, err = strconv.ParseBool(vStr)
-	}
+	value, err := value.Parse(v.DataType, parts[1])
 	if err != nil {
 		return nil, err
 	}
