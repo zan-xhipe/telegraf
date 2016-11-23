@@ -59,7 +59,8 @@ type Config struct {
 
 	// TimeLayout only applies to timestamp-value, this will be the layout of the
 	// timestamp. If no layout is provided then the default is the unix timestamp in
-	// nanoseconds.
+	// nanoseconds. The layout can also be provided as a layout name i.e "RFC3339",
+	// for any of the layouts supported by default in the go time package.
 	TimeLayout string
 
 	// TimeDelimiter only applies to timestamp-value, this will be the delimiter
@@ -147,11 +148,12 @@ func NewTimestampValueParser(
 	timeLayout string,
 	defaultTags map[string]string,
 ) (Parser, error) {
-	return &timestampvalue.TimestampValueParser{
-		MetricName:  metricName,
-		DataType:    dataType,
-		Delimiter:   timeDelimiter,
-		TimeLayout:  timeLayout,
-		DefaultTags: defaultTags,
-	}, nil
+	p := timestampvalue.New(
+		metricName,
+		dataType,
+		timeDelimiter,
+		timeLayout,
+	)
+	p.DefaultTags = defaultTags
+	return &p, nil
 }
