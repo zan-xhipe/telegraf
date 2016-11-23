@@ -9,6 +9,7 @@ import (
 	"github.com/influxdata/telegraf/plugins/parsers/influx"
 	"github.com/influxdata/telegraf/plugins/parsers/json"
 	"github.com/influxdata/telegraf/plugins/parsers/nagios"
+	timestampvalue "github.com/influxdata/telegraf/plugins/parsers/timestamp-value"
 	"github.com/influxdata/telegraf/plugins/parsers/value"
 )
 
@@ -56,6 +57,12 @@ type Config struct {
 	// DataType only applies to value, this will be the type to parse value to
 	DataType string
 
+	// TimeLayout only applies to timestamp-value, this will be the layout of the timestamp.
+	TimeLayout string
+
+	// TimeDelimiter only applies to timestamp-value, this will be the delimiter between the timestamp and the value
+	TimeDelimiter string
+
 	// DefaultTags are the default tags that will be added to all parsed metrics.
 	DefaultTags map[string]string
 }
@@ -71,6 +78,10 @@ func NewParser(config *Config) (Parser, error) {
 	case "value":
 		parser, err = NewValueParser(config.MetricName,
 			config.DataType, config.DefaultTags)
+	case "timestamp-value":
+		parser, err = NewTimestampValueParser(config.MetricName,
+			config.DataType, config.TimeDelimiter, config.TimeLayout,
+			config.DefaultTags)
 	case "influx":
 		parser, err = NewInfluxParser()
 	case "nagios":
@@ -121,6 +132,22 @@ func NewValueParser(
 	return &value.ValueParser{
 		MetricName:  metricName,
 		DataType:    dataType,
+		DefaultTags: defaultTags,
+	}, nil
+}
+
+func NewTimestampValueParser(
+	metricName string,
+	dataType string,
+	timeDelimiter string,
+	timeLayout string,
+	defaultTags map[string]string,
+) (Parser, error) {
+	return &timestampvalue.TimestampValueParser{
+		MetricName:  metricName,
+		DataType:    dataType,
+		Delimiter:   timeDelimiter,
+		TimeLayout:  timeLayout,
 		DefaultTags: defaultTags,
 	}, nil
 }
