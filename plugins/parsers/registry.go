@@ -57,10 +57,14 @@ type Config struct {
 	// DataType only applies to value, this will be the type to parse value to
 	DataType string
 
-	// TimeLayout only applies to timestamp-value, this will be the layout of the timestamp.
+	// TimeLayout only applies to timestamp-value, this will be the layout of the
+	// timestamp. If no layout is provided then the default is the unix timestamp in
+	// nanoseconds.
 	TimeLayout string
 
-	// TimeDelimiter only applies to timestamp-value, this will be the delimiter between the timestamp and the value
+	// TimeDelimiter only applies to timestamp-value, this will be the delimiter
+	// between the timestamp and the value. If no delimiter is provided then the
+	// default is a single space " ".
 	TimeDelimiter string
 
 	// DefaultTags are the default tags that will be added to all parsed metrics.

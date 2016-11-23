@@ -20,11 +20,29 @@ type TimestampValueParser struct {
 
 func (v *TimestampValueParser) Parse(buf []byte) ([]telegraf.Metric, error) {
 	vStr := string(bytes.TrimSpace(bytes.Trim(buf, "\x00")))
-	parts := strings.Split(vStr, v.Delimiter)
 
-	timestamp, err := time.Parse(v.TimeLayout, parts[0])
-	if err != nil {
-		return nil, err
+	delim := v.Delimiter
+	if v.Delimiter == "" {
+		delim = " "
+	}
+	parts := strings.Split(vStr, delim)
+
+	var timestamp time.Time
+	var err error
+	ts := parts[0]
+	if v.TimeLayout == "" {
+		i, err := strconv.ParseInt(ts, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+
+		timestamp = time.Unix(0, i)
+
+	} else {
+		timestamp, err = time.Parse(v.TimeLayout, parts[0])
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	vStr = parts[1]
