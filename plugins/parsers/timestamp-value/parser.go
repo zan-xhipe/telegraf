@@ -25,6 +25,9 @@ func (v *TimestampValueParser) Parse(buf []byte) ([]telegraf.Metric, error) {
 		delim = []byte{' '}
 	}
 	parts := bytes.Split(buf, delim)
+	if len(parts) < 2 {
+		return nil, fmt.Errorf("timestamp-values must both a timestamp and a value")
+	}
 
 	var timestamp time.Time
 	var err error
