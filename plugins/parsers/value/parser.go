@@ -17,21 +17,37 @@ type ValueParser struct {
 }
 
 func (v *ValueParser) Parse(buf []byte) ([]telegraf.Metric, error) {
+	value, err := Parse(v.DataType, buf)
+	if err != nil {
+		return nil, err
+	}
+
+	fields := map[string]interface{}{"value": value}
+	metric, err := telegraf.NewMetric(v.MetricName, v.DefaultTags,
+		fields, time.Now().UTC())
+	if err != nil {
+		return nil, err
+	}
+
+	return []telegraf.Metric{metric}, nil
+}
+
+func Parse(dataType string, buf []byte) (interface{}, error) {
 	vStr := string(bytes.TrimSpace(bytes.Trim(buf, "\x00")))
 
 	// unless it's a string, separate out any fields in the buffer,
 	// ignore anything but the last.
-	if v.DataType != "string" {
+	if dataType != "string" {
 		values := strings.Fields(vStr)
 		if len(values) < 1 {
-			return []telegraf.Metric{}, nil
+			return nil, nil
 		}
 		vStr = string(values[len(values)-1])
 	}
 
 	var value interface{}
 	var err error
-	switch v.DataType {
+	switch dataType {
 	case "", "int", "integer":
 		value, err = strconv.Atoi(vStr)
 	case "float", "long":
@@ -45,14 +61,7 @@ func (v *ValueParser) Parse(buf []byte) ([]telegraf.Metric, error) {
 		return nil, err
 	}
 
-	fields := map[string]interface{}{"value": value}
-	metric, err := telegraf.NewMetric(v.MetricName, v.DefaultTags,
-		fields, time.Now().UTC())
-	if err != nil {
-		return nil, err
-	}
-
-	return []telegraf.Metric{metric}, nil
+	return value, nil
 }
 
 func (v *ValueParser) ParseLine(line string) (telegraf.Metric, error) {
