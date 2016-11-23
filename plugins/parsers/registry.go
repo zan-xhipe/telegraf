@@ -83,7 +83,7 @@ func NewParser(config *Config) (Parser, error) {
 	case "value":
 		parser, err = NewValueParser(config.MetricName,
 			config.DataType, config.DefaultTags)
-	case "timestamp-value":
+	case "timestamp_value":
 		parser, err = NewTimestampValueParser(config.MetricName,
 			config.DataType, config.TimeDelimiter, config.TimeLayout,
 			config.DefaultTags)

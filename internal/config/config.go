@@ -1229,6 +1229,22 @@ func buildParser(name string, tbl *ast.Table) (parsers.Parser, error) {
 		}
 	}
 
+	if node, ok := tbl.Fields["time_layout"]; ok {
+		if kv, ok := node.(*ast.KeyValue); ok {
+			if str, ok := kv.Value.(*ast.String); ok {
+				c.TimeLayout = str.Value
+			}
+		}
+	}
+
+	if node, ok := tbl.Fields["time_delimiter"]; ok {
+		if kv, ok := node.(*ast.KeyValue); ok {
+			if str, ok := kv.Value.(*ast.String); ok {
+				c.TimeDelimiter = str.Value
+			}
+		}
+	}
+
 	c.MetricName = name
 
 	delete(tbl.Fields, "data_format")
@@ -1236,6 +1252,8 @@ func buildParser(name string, tbl *ast.Table) (parsers.Parser, error) {
 	delete(tbl.Fields, "templates")
 	delete(tbl.Fields, "tag_keys")
 	delete(tbl.Fields, "data_type")
+	delete(tbl.Fields, "time_layout")
+	delete(tbl.Fields, "time_delimiter")
 
 	return parsers.NewParser(c)
 }
